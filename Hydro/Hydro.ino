@@ -1,28 +1,27 @@
 #include <Wire.h>
 #include <RTClib.h>
-//#include <LiquidCrystal.h>
+#include <LiquidCrystal.h>
 
+LiquidCrystal lcd(P1_0, P1_1, P1_2, P1_3, P1_4, P1_5);
 RTC_DS1307 RTC;
-//LiquidCrystal lcd(P1_0, P1_1, P1_2, P1_3, P1_4, P1_5);
+
+
 
 void setup()
 {
   Wire.begin();
-  RTC.begin(); 
-  pinMode(2, OUTPUT); //led1
-  digitalWrite(2, LOW); //сброс на 0  
+    RTC.begin();
 
-  pinMode(5, INPUT_PULLUP);  //кнопень
+
+  //pinMode(5, INPUT_PULLUP);  //кнопень
 
   pinMode(19, OUTPUT);  //смеситель
   digitalWrite(19, LOW); //сброс на 0 
 
-  Serial.begin(9600);
-  
-  // set up the LCD's number of columns and rows: 
-  lcd.begin(16, 2);
-  // Print a message to the LCD.
-  lcd.print("hello, world!");  
+Serial.begin(9600);
+    
+//  lcd.begin(16, 2);
+  //lcd.print("hello, world!");
 
 }
 
@@ -34,19 +33,15 @@ long smesitel = 2000; //время работы смесителя
 /////////////////////////////////////////////////
 void loop()
 {
+ 
   
-//  lcd.setCursor(0, 1);
-  // print the number of seconds since reset:
-//  lcd.print(millis()/1000);
-
-  
-   if (digitalRead(5) == LOW) {    //полив по нажатию кнопки вне очереди
-      poliv ();  
-    } 
+ //  if (digitalRead(5) == LOW) {    //полив по нажатию кнопки вне очереди
+   //   poliv ();  
+   // } 
   
    if (voda()>0)       //уровень воды нормальный
    {
-      digitalWrite(2, LOW); //гасим красный
+     // digitalWrite(2, LOW); //гасим красный
   
       unsigned long currentMillis = millis();     //время с момента последнего запуска или резета
       long time=currentMillis - previousMillis;
@@ -59,7 +54,7 @@ void loop()
           }
     }
     else {    
-       digitalWrite(2, HIGH); //зажигаем красный
+     //  digitalWrite(2, HIGH); //зажигаем красный
     }
    
     DateTime now = RTC.now();
@@ -89,6 +84,7 @@ void loop()
    else {    
      Serial.print(now.hour());
        Serial.println(" svet off ");
+
     }
     
     
@@ -118,9 +114,9 @@ void poliv() {
 
 void svet() {
 //процедура полива
-    digitalWrite(2, HIGH); 
+   // digitalWrite(2, HIGH); 
     delay (1000);
-    digitalWrite(2, LOW);  
+   // digitalWrite(2, LOW);  
     delay (1000);
     return;  
 }
