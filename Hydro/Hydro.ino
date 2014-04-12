@@ -5,120 +5,275 @@
 LiquidCrystal lcd(P1_0, P1_1, P1_2, P1_3, P1_4, P1_5);
 RTC_DS1307 RTC;
 
+const int butsel = 11;
+const int butplus = 12;
+const int butminus = 13;
 
 
 void setup()
 {
-  Wire.begin();
+    Wire.begin();
     RTC.begin();
 
-
-  //pinMode(5, INPUT_PULLUP);  //кнопень
-
-  pinMode(19, OUTPUT);  //смеситель
-  digitalWrite(19, LOW); //сброс на 0 
-
-Serial.begin(9600);
+    pinMode(19, OUTPUT);  //смеситель
+    digitalWrite(19, LOW); //сброс на 0 
+    pinMode(18, OUTPUT);  //свет
+    digitalWrite(18, LOW); //сброс на 0 
     
-//  lcd.begin(16, 2);
-  //lcd.print("hello, world!");
+    pinMode(butsel, INPUT_PULLUP);  //кнопень    
+    pinMode(butplus, INPUT_PULLUP);  //кнопень   
+    pinMode(butminus, INPUT_PULLUP);  //кнопень
+  //  Serial.begin(9600);
+    
+   lcd.begin(16, 2);
+   lcd.print("hello, world!");
 
 }
 
-long previousMillis = 0;  
-long interval = 360000; //интервал между поливами
-long smesitel = 2000; //время работы смесителя
+long interval, smesitel, previousMillis = 0;  
+//long interval = 360000; //интервал между поливами
+//long smesitel = 2000; //время работы смесителя
 
 
 /////////////////////////////////////////////////
 void loop()
-{
- 
+{ 
   
- //  if (digitalRead(5) == LOW) {    //полив по нажатию кнопки вне очереди
-   //   poliv ();  
-   // } 
   
-   if (voda()>0)       //уровень воды нормальный
-   {
-     // digitalWrite(2, LOW); //гасим красный
   
-      unsigned long currentMillis = millis();     //время с момента последнего запуска или резета
-      long time=currentMillis - previousMillis;
-      long time1=(interval-time)/1000; //Оставшееся время до запуска в sec
-       
-      Serial.println(time1); 
-      if(time > interval) {
-          previousMillis = currentMillis;   
-          poliv ();
-          }
-    }
-    else {    
-     //  digitalWrite(2, HIGH); //зажигаем красный
-    }
-   
     DateTime now = RTC.now();
-    Serial.print(now.year(), DEC);
-    Serial.print('/');
-   if (now.month() <10) Serial.print('0');    
-    Serial.print(now.month(), DEC);
-    Serial.print('/');
-    if (now.day() <10) Serial.print('0');    
-    Serial.print(now.day(), DEC);
-    Serial.print(' ');
-    if (now.hour() <10) Serial.print('0');
+ /*   if (now.hour() <10) Serial.print('0');
     Serial.print(now.hour(), DEC);
     Serial.print(':');
     if (now.minute() <10) Serial.print('0');
     Serial.print(now.minute(), DEC);
-    Serial.print(':');
-    if (now.second() <10) Serial.print('0');
-    Serial.print(now.second(), DEC);
-    Serial.println();  
+*/
+    lcd.clear();
+    lcd.setCursor(0, 0);
 
-   if ((now.hour() >= 8) and (now.hour() <=10) ) {
-          Serial.print(now.hour());
-       Serial.println(" svet on "); 
-      svet(); 
+    if (now.hour() <10) lcd.print('0');
+    lcd.print(now.hour(), DEC);
+    lcd.print(':');
+    if (now.minute() <10) lcd.print('0');
+    lcd.print(now.minute(), DEC);
+
+    interval=bcd2bin(RTC.readByteInRam(0x15))*60000;
+     
+    unsigned long currentMillis = millis();     //время с момента последнего запуска или резета
+    long time=currentMillis - previousMillis;
+    long time1=(interval-time)/1000; //Оставшееся время до запуска в sec
+  //    Serial.print("do poliva: ");
+  //    Serial.println(time1);
+    lcd.setCursor(0, 1);
+    lcd.print("Do poliva: ");
+    lcd.print(time1);
+    if(time > interval) {
+          previousMillis = currentMillis;   
+          poliv ();
+     }
+ 
+
+   if (digitalRead(butplus) == LOW) {    //полив по нажатию кнопки вне очереди
+      delay(500);
+      poliv ();  
     } 
-   else {    
-     Serial.print(now.hour());
-       Serial.println(" svet off ");
-
-    }
-    
-    
-  delay(1000);     //задержка на каждый цикл  
   
+      if (digitalRead(butsel) == LOW)  
+    {        
+       delay(500);
+       set_time();
+    }  
+
+
+   if ((now.hour() >= bcd2bin(RTC.readByteInRam(0x11))) and (now.hour() <= bcd2bin(RTC.readByteInRam(0x13))) ) {
+    //   Serial.println(" svet on "); 
+    lcd.setCursor(7, 0);
+    lcd.print("Svet: ON");
+    digitalWrite(18, HIGH);
+    } 
+   else {
+   //    Serial.println(" svet off ");
+    lcd.setCursor(7, 0);
+    lcd.print("svet: OFF");
+    digitalWrite(18, LOW);      
+    }
+
+
+  delay(1000);     //задержка на каждый цикл    
 }                 //end main loop
 
 
 
 /////////////////////////////////////////////////////////
 
-int voda () {
-//проверяем уровень воды, если 1 то норм
-  return 1; //random (2);
-}
 
 void poliv() {
 //процедура полива
     digitalWrite(19, HIGH); 
-    Serial.println("idet poliv"); 
+   // Serial.println("idet poliv"); 
+    lcd.clear();
+    lcd.setCursor(3, 0);
+    lcd.print("Idet poliv");
+    smesitel=bcd2bin(RTC.readByteInRam(0x15))*1000;
+    lcd.setCursor(5, 1);
+    lcd.print(smesitel/1000);
+    lcd.print(" sec");    
     delay (smesitel);
     digitalWrite(19, LOW);  
-    Serial.println("poliv okonchen");
-    delay (800);
+    //Serial.println("poliv okonchen");
+    delay (100);
     return;  
 }
 
-void svet() {
-//процедура полива
-   // digitalWrite(2, HIGH); 
-    delay (1000);
-   // digitalWrite(2, LOW);  
-    delay (1000);
-    return;  
+void set_time() {
+       uint8_t data, addr;
+//       Serial.print ("Nastroika vremeni");
+//       Serial.println();
+    lcd.clear();
+    lcd.print("Nastroika");
+    delay(1500);     
+//установка часов
+
+       addr=0x02;
+       data = bcd2bin(RTC.readByteInRam(addr));
+       //Serial.print ("Seychas Chasov: ");
+       //Serial.println(data);
+       lcd.clear();
+       lcd.setCursor(0, 0);
+       lcd.print("Seychas chasov: ");
+       lcd.setCursor(0, 1);
+       lcd.print(data);
+       edit_ram(data,23,addr);
+       data = bcd2bin(RTC.readByteInRam(addr));       
+       //Serial.print ("Chasov: ");
+       //Serial.println(data);
+       lcd.clear();
+       lcd.setCursor(0, 0);
+       lcd.print("Seychas chasov: ");
+       lcd.setCursor(0, 1);
+       lcd.print(data);       
+       delay(1000);    
+    
+       
+//установка минут
+       addr=0x01;
+       data = bcd2bin(RTC.readByteInRam(addr));
+       Serial.print ("Seychas minut: ");
+       Serial.println(data);
+       edit_ram(data,59,addr);
+       data = bcd2bin(RTC.readByteInRam(addr));
+       Serial.print ("minut: ");
+       Serial.println(data);       
+       Serial.println();
+       delay(1000);
+        
+//установка времени включения света чч:11, мм:12
+       addr=0x11;
+       data = bcd2bin(RTC.readByteInRam(addr));
+       Serial.print ("Vkluchenie sveta v: ");
+       Serial.println(data);
+       edit_ram(data,23,addr);
+       data = bcd2bin(RTC.readByteInRam(addr));
+       Serial.print ("Vkluchenie sveta v: ");
+       Serial.println(data);       
+       Serial.println();
+       delay(1000);
+  /*     
+       addr=0x12;
+       data = bcd2bin(RTC.readByteInRam(addr));
+       Serial.print ("start svet minut: ");
+       Serial.println(data);
+       edit_ram(data,59,addr);
+       data = bcd2bin(RTC.readByteInRam(addr));
+       Serial.print ("start svet minut: ");
+       Serial.println(data);       
+       Serial.println();
+       delay(1000); 
+    */          
+//установка времени выключения света чч:13, мм:14
+       addr=0x13;
+       data = bcd2bin(RTC.readByteInRam(addr));
+       Serial.print ("Vikluchenie sveta v: ");
+       Serial.println(data);
+       edit_ram(data,23,addr);
+       data = bcd2bin(RTC.readByteInRam(addr));
+       Serial.print ("Vikluchenie sveta v: ");
+       Serial.println(data);       
+       Serial.println();
+       delay(1000);
+      /* 
+       addr=0x14;
+       data = bcd2bin(RTC.readByteInRam(addr));
+       Serial.print ("off svet minut: ");
+       Serial.println(data);
+       edit_ram(data,59,addr);
+       data = bcd2bin(RTC.readByteInRam(addr));
+       Serial.print ("off svet minut: ");
+       Serial.println(data);       
+       Serial.println();
+       delay(1000); 
+       */                   
+//регулярность смешивания мин:15
+
+       addr=0x15;
+       data = bcd2bin(RTC.readByteInRam(addr));
+       Serial.print ("regularnost smeshivania (min): ");
+       Serial.println(data);
+       edit_ram(data,59,addr);
+       data = bcd2bin(RTC.readByteInRam(addr));
+       Serial.print ("regularnost smeshivania(min): ");
+       Serial.println(data);       
+       Serial.println();
+       delay(1000); 
+       
+//длительность смешивания сек:16  
+       addr=0x15;
+       data = bcd2bin(RTC.readByteInRam(addr));
+       Serial.print ("vremya smeshivania(sec): ");
+       Serial.println(data);
+       edit_ram(data,59,addr);
+       data = bcd2bin(RTC.readByteInRam(addr));
+       Serial.print ("vremya smeshivania(sec): ");
+       Serial.println(data);       
+       Serial.println();
+       delay(1000);       
+       return;
+}  
+
+
+void edit_ram (uint8_t data, uint8_t max, uint8_t addr) {
+       do{             
+            if (digitalRead(butplus) == LOW){
+                  delay(300);
+                  data++;
+                  if (data>max){data=0;}
+                  RTC.writeByteInRam(addr, bin2bcd(data));
+                  //Serial.print(data);
+                 lcd.clear();
+                 lcd.setCursor(0, 0);
+                 lcd.print(data);                 
+             }           
+  
+             if (digitalRead(butminus) == LOW){
+                  delay(300);
+                  data--;
+                  if (data==255){data=max;}
+                  RTC.writeByteInRam(addr, bin2bcd(data));                 
+                  //Serial.print(data);
+                 lcd.clear();
+                 lcd.setCursor(0, 0);
+                 lcd.print(data);  
+             } 
+                  
+             if (digitalRead(butsel) == LOW){
+                  delay(300);
+                  break;
+             }    
+       } 
+       while (1); 
+return;  
 }
-
-
+  
+  
+static uint8_t bcd2bin (uint8_t val) { return val - 6 * (val >> 4); }
+static uint8_t bin2bcd (uint8_t val) { return val + 6 * (val / 10); }
