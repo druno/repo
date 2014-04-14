@@ -26,7 +26,6 @@ void setup()
   //  Serial.begin(9600);
     
    lcd.begin(16, 2);
-   lcd.print("hello, world!");
 
 }
 
@@ -65,7 +64,9 @@ void loop()
   //    Serial.print("do poliva: ");
   //    Serial.println(time1);
     lcd.setCursor(0, 1);
-    lcd.print("Do poliva: ");
+    lcd.print("\xE0o \xBEo\xBB"); //do poliva
+    lcd.print("\xB8\xB3");  
+    lcd.print("a: ");  
     lcd.print(time1);
     if(time > interval) {
           previousMillis = currentMillis;   
@@ -88,13 +89,13 @@ void loop()
    if ((now.hour() >= bcd2bin(RTC.readByteInRam(0x11))) and (now.hour() <= bcd2bin(RTC.readByteInRam(0x13))) ) {
     //   Serial.println(" svet on "); 
     lcd.setCursor(7, 0);
-    lcd.print("Svet: ON");
+    lcd.print("C\xB3""e\xBF: \xB3\xBA\xBB");
     digitalWrite(18, HIGH);
     } 
    else {
    //    Serial.println(" svet off ");
     lcd.setCursor(7, 0);
-    lcd.print("svet: OFF");
+    lcd.print("C\xB3""e\xBF \xB3\xC3\xBA\xBB");
     digitalWrite(18, LOW);      
     }
 
@@ -113,11 +114,12 @@ void poliv() {
    // Serial.println("idet poliv"); 
     lcd.clear();
     lcd.setCursor(3, 0);
-    lcd.print("Idet poliv");
-    smesitel=bcd2bin(RTC.readByteInRam(0x15))*1000;
+    lcd.print("\xB8\xE3\xB5\xBF \xBEo\xBB\xB8\xB3");
+    smesitel=bcd2bin(RTC.readByteInRam(0x16));
     lcd.setCursor(5, 1);
-    lcd.print(smesitel/1000);
-    lcd.print(" sec");    
+    lcd.print(smesitel);
+    lcd.print(" ce\xBA"); 
+    smesitel=smesitel*1000;   
     delay (smesitel);
     digitalWrite(19, LOW);  
     //Serial.println("poliv okonchen");
@@ -143,6 +145,7 @@ void set_time() {
        lcd.print("Seychas chasov: ");
        lcd.setCursor(0, 1);
        lcd.print(data);
+       lcd.blink();
        edit_ram(data,23,addr);
        data = bcd2bin(RTC.readByteInRam(addr));       
        //Serial.print ("Chasov: ");
@@ -158,25 +161,43 @@ void set_time() {
 //установка минут
        addr=0x01;
        data = bcd2bin(RTC.readByteInRam(addr));
-       Serial.print ("Seychas minut: ");
-       Serial.println(data);
+       //Serial.print ("Seychas minut: ");
+       //Serial.println(data);
+       lcd.clear();
+       lcd.setCursor(0, 0);
+       lcd.print("Seychas minut: ");
+       lcd.setCursor(0, 1);
+       lcd.print(data);
        edit_ram(data,59,addr);
        data = bcd2bin(RTC.readByteInRam(addr));
-       Serial.print ("minut: ");
-       Serial.println(data);       
-       Serial.println();
+       //Serial.print ("minut: ");
+       //Serial.println(data);       
+       lcd.clear();
+       lcd.setCursor(0, 0);
+       lcd.print("Seychas minut: ");
+       lcd.setCursor(0, 1);
+       lcd.print(data);
        delay(1000);
         
 //установка времени включения света чч:11, мм:12
        addr=0x11;
        data = bcd2bin(RTC.readByteInRam(addr));
-       Serial.print ("Vkluchenie sveta v: ");
-       Serial.println(data);
+       //Serial.print ("Vkluchenie sveta v: ");
+       //Serial.println(data);
+       lcd.clear();
+       lcd.setCursor(0, 0);
+       lcd.print("Vkl. sveta v: ");
+       lcd.setCursor(0, 1);
+       lcd.print(data);
        edit_ram(data,23,addr);
        data = bcd2bin(RTC.readByteInRam(addr));
-       Serial.print ("Vkluchenie sveta v: ");
-       Serial.println(data);       
-       Serial.println();
+       //Serial.print ("Vkluchenie sveta v: ");
+       //Serial.println(data);       
+       lcd.clear();
+       lcd.setCursor(0, 0);
+       lcd.print("Vkl. sveta v: ");
+       lcd.setCursor(0, 1);
+       lcd.print(data);
        delay(1000);
   /*     
        addr=0x12;
@@ -193,13 +214,22 @@ void set_time() {
 //установка времени выключения света чч:13, мм:14
        addr=0x13;
        data = bcd2bin(RTC.readByteInRam(addr));
-       Serial.print ("Vikluchenie sveta v: ");
-       Serial.println(data);
+       //Serial.print ("Vikluchenie sveta v: ");
+       //Serial.println(data);
+       lcd.clear();
+       lcd.setCursor(0, 0);
+       lcd.print("Vikl. sveta v: ");
+       lcd.setCursor(0, 1);
+       lcd.print(data);      
        edit_ram(data,23,addr);
        data = bcd2bin(RTC.readByteInRam(addr));
-       Serial.print ("Vikluchenie sveta v: ");
-       Serial.println(data);       
-       Serial.println();
+       //Serial.print ("Vikluchenie sveta v: ");
+       //Serial.println(data);       
+       lcd.clear();
+       lcd.setCursor(0, 0);
+       lcd.print("Vikl. sveta v: ");
+       lcd.setCursor(0, 1);
+       lcd.print(data);
        delay(1000);
       /* 
        addr=0x14;
@@ -217,26 +247,53 @@ void set_time() {
 
        addr=0x15;
        data = bcd2bin(RTC.readByteInRam(addr));
-       Serial.print ("regularnost smeshivania (min): ");
-       Serial.println(data);
+       //Serial.print ("regularnost smeshivania (min): ");
+       //Serial.println(data);
+       lcd.clear();
+       lcd.setCursor(0, 0);      
+       lcd.print("Chastota poliva ");
+       lcd.setCursor(4, 1);
+       lcd.print("min");          
+       lcd.setCursor(0, 1);
+       lcd.print(data);
        edit_ram(data,59,addr);
        data = bcd2bin(RTC.readByteInRam(addr));
-       Serial.print ("regularnost smeshivania(min): ");
-       Serial.println(data);       
-       Serial.println();
+       //Serial.print ("regularnost smeshivania(min): ");
+       //Serial.println(data);       
+       lcd.clear();
+       lcd.setCursor(0, 0);
+       lcd.print("Chastota poliva ");
+       lcd.setCursor(4, 1);
+       lcd.print("min");      
+       lcd.setCursor(0, 1);
+       lcd.print(data);
        delay(1000); 
        
 //длительность смешивания сек:16  
-       addr=0x15;
+       addr=0x16;
        data = bcd2bin(RTC.readByteInRam(addr));
-       Serial.print ("vremya smeshivania(sec): ");
-       Serial.println(data);
+       //Serial.print ("vremya smeshivania(sec): ");
+       //Serial.println(data);
+       lcd.clear();
+       lcd.setCursor(0, 0);
+       lcd.print("Vremya poliva ");
+       lcd.setCursor(4, 1);
+       lcd.print("sec"); 
+       lcd.setCursor(0, 1);
+       lcd.print(data);
        edit_ram(data,59,addr);
        data = bcd2bin(RTC.readByteInRam(addr));
-       Serial.print ("vremya smeshivania(sec): ");
-       Serial.println(data);       
-       Serial.println();
-       delay(1000);       
+       //Serial.print ("vremya smeshivania(sec): ");
+       //Serial.println(data);
+       lcd.clear();
+       lcd.setCursor(0, 0);
+       lcd.print("Vremya poliva ");
+       lcd.setCursor(4, 1);
+       lcd.print("sec");       
+       lcd.setCursor(0, 1);
+       lcd.print(data);
+       delay(1000);     
+      lcd.noBlink();  
        return;
 }  
 
