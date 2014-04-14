@@ -56,7 +56,7 @@ void loop()
     if (now.minute() <10) lcd.print('0');
     lcd.print(now.minute(), DEC);
 
-    interval=bcd2bin(RTC.readByteInRam(0x15))*60000;
+    interval=RTC.readByteInRam(0x15)*60000;
      
     unsigned long currentMillis = millis();     //время с момента последнего запуска или резета
     long time=currentMillis - previousMillis;
@@ -64,16 +64,27 @@ void loop()
   //    Serial.print("do poliva: ");
   //    Serial.println(time1);
     lcd.setCursor(0, 1);
-    lcd.print("\xE0o \xBEo\xBB"); //do poliva
-    lcd.print("\xB8\xB3");  
-    lcd.print("a: ");  
-    lcd.print(time1);
+    lcd.print("\xE0o \xBEo\xBB""\xB8\xB3""a ");  //do poliva
+  
+     
     if(time > interval) {
           previousMillis = currentMillis;   
           poliv ();
      }
  
-
+     if (time1>=90){
+       lcd.print(time1/60+1);
+       if (time1<=6000){ //если время меньше 99 мин
+         lcd.print(" ");
+       }  
+       lcd.print("min"); 
+     }
+     
+     else{
+       lcd.print(time1);
+       lcd.print(" sek""\x20"); 
+     }
+     
    if (digitalRead(butplus) == LOW) {    //полив по нажатию кнопки вне очереди
       delay(500);
       poliv ();  
@@ -114,15 +125,16 @@ void poliv() {
    // Serial.println("idet poliv"); 
     lcd.clear();
     lcd.setCursor(3, 0);
-    lcd.print("\xB8\xE3\xB5\xBF \xBEo\xBB\xB8\xB3");
-    smesitel=bcd2bin(RTC.readByteInRam(0x16));
-    lcd.setCursor(5, 1);
-    lcd.print(smesitel);
-    lcd.print(" ce\xBA"); 
-    smesitel=smesitel*1000;   
-    delay (smesitel);
-    digitalWrite(19, LOW);  
-    //Serial.println("poliv okonchen");
+    lcd.print("\xB8\xE3\xB5\xBF \xBEo\xBB\xB8\xB3");//idet poliv
+    smesitel=RTC.readByteInRam(0x16);
+    for (int i=smesitel; i>0; i--){
+      lcd.setCursor(5, 1);
+      lcd.print(i);
+      lcd.print(" ce\xBA\x20");    //sek
+      delay(1000);
+    }  
+   
+    digitalWrite(19, LOW);   
     delay (100);
     return;  
 }
@@ -246,7 +258,7 @@ void set_time() {
 //регулярность смешивания мин:15
 
        addr=0x15;
-       data = bcd2bin(RTC.readByteInRam(addr));
+       data = RTC.readByteInRam(addr);
        //Serial.print ("regularnost smeshivania (min): ");
        //Serial.println(data);
        lcd.clear();
@@ -256,8 +268,8 @@ void set_time() {
        lcd.print("min");          
        lcd.setCursor(0, 1);
        lcd.print(data);
-       edit_ram(data,59,addr);
-       data = bcd2bin(RTC.readByteInRam(addr));
+       edit_ram_255(data,240,addr);
+       data = RTC.readByteInRam(addr);
        //Serial.print ("regularnost smeshivania(min): ");
        //Serial.println(data);       
        lcd.clear();
@@ -271,7 +283,7 @@ void set_time() {
        
 //длительность смешивания сек:16  
        addr=0x16;
-       data = bcd2bin(RTC.readByteInRam(addr));
+       data = RTC.readByteInRam(addr);
        //Serial.print ("vremya smeshivania(sec): ");
        //Serial.println(data);
        lcd.clear();
@@ -281,8 +293,8 @@ void set_time() {
        lcd.print("sec"); 
        lcd.setCursor(0, 1);
        lcd.print(data);
-       edit_ram(data,59,addr);
-       data = bcd2bin(RTC.readByteInRam(addr));
+       edit_ram_255(data,240,addr);
+       data = RTC.readByteInRam(addr);
        //Serial.print ("vremya smeshivania(sec): ");
        //Serial.println(data);
        lcd.clear();
@@ -293,7 +305,7 @@ void set_time() {
        lcd.setCursor(0, 1);
        lcd.print(data);
        delay(1000);     
-      lcd.noBlink();  
+      lcd.noBlink(); 
        return;
 }  
 
@@ -301,7 +313,7 @@ void set_time() {
 void edit_ram (uint8_t data, uint8_t max, uint8_t addr) {
        do{             
             if (digitalRead(butplus) == LOW){
-                  delay(300);
+                  delay(100);
                   data++;
                   if (data>max){data=0;}
                   RTC.writeByteInRam(addr, bin2bcd(data));
@@ -312,7 +324,7 @@ void edit_ram (uint8_t data, uint8_t max, uint8_t addr) {
              }           
   
              if (digitalRead(butminus) == LOW){
-                  delay(300);
+                  delay(100);
                   data--;
                   if (data==255){data=max;}
                   RTC.writeByteInRam(addr, bin2bcd(data));                 
@@ -330,7 +342,40 @@ void edit_ram (uint8_t data, uint8_t max, uint8_t addr) {
        while (1); 
 return;  
 }
+ 
+ 
+void edit_ram_255 (uint8_t data, uint8_t max, uint8_t addr) {
+       do{             
+            if (digitalRead(butplus) == LOW){
+                  delay(300);
+                  data++;
+                  if (data>max){data=0;}
+                  RTC.writeByteInRam(addr, data);
+                  //Serial.print(data);
+                 lcd.clear();
+                 lcd.setCursor(0, 0);
+                 lcd.print(data);                 
+             }           
   
+             if (digitalRead(butminus) == LOW){
+                  delay(300);
+                  data--;
+                  if (data==255){data=max;}
+                  RTC.writeByteInRam(addr, data);                 
+                  //Serial.print(data);
+                 lcd.clear();
+                 lcd.setCursor(0, 0);
+                 lcd.print(data);  
+             } 
+                  
+             if (digitalRead(butsel) == LOW){
+                  delay(300);
+                  break;
+             }    
+       } 
+       while (1); 
+return;  
+} 
   
 static uint8_t bcd2bin (uint8_t val) { return val - 6 * (val >> 4); }
 static uint8_t bin2bcd (uint8_t val) { return val + 6 * (val / 10); }
