@@ -38,7 +38,16 @@ long interval, smesitel, previousMillis = 0;
 void loop()
 { 
   
+     if (digitalRead(butplus) == LOW) {    //полив по нажатию кнопки вне очереди
+      delay(500);
+      poliv ();  
+    } 
   
+      if (digitalRead(butsel) == LOW)  
+    {        
+       delay(500);
+       set_time();
+    }  
   
     DateTime now = RTC.now();
  /*   if (now.hour() <10) Serial.print('0');
@@ -56,7 +65,7 @@ void loop()
     if (now.minute() <10) lcd.print('0');
     lcd.print(now.minute(), DEC);
 
-    interval=RTC.readByteInRam(0x15)*60000; //переводим секунды в миллисекунды и потом в секунды
+    interval=RTC.readByteInRam(0x15)*60000; //переводим минуты в секунды (умножить на 60) и потом в миллисекунды
      
     unsigned long currentMillis = millis();     //время с момента последнего запуска или резета
     long time=currentMillis - previousMillis;
@@ -84,22 +93,11 @@ void loop()
      else{
        if (time1<=9){ //если время меньше 10 сек
          lcd.print("0");
-       }    
+       }
        lcd.print(time1);
        lcd.print(" ce\xBA\x20"); 
      }
      
-   if (digitalRead(butplus) == LOW) {    //полив по нажатию кнопки вне очереди
-      delay(500);
-      poliv ();  
-    } 
-  
-      if (digitalRead(butsel) == LOW)  
-    {        
-       delay(500);
-       set_time();
-    }  
-
 
    if ((now.hour() >= bcd2bin(RTC.readByteInRam(0x11))) and (now.hour() <= bcd2bin(RTC.readByteInRam(0x13))) ) {
     //   Serial.println(" svet on "); 
@@ -115,6 +113,7 @@ void loop()
     }
 
 
+    
   delay(1000);     //задержка на каждый цикл    
 }                 //end main loop
 
@@ -149,13 +148,57 @@ void set_time() {
 //       Serial.print ("Nastroika vremeni");
 //       Serial.println();
     lcd.clear();
-    lcd.print("Hac\xBF""po\xB9\xBA""a");
+    lcd.print("Hac\xBF""po\xB9\xBA""a");//настройка системы
     lcd.setCursor(0, 1);
     lcd.print("c\xB8""c\xBF""e\xBC\xC3");
          
     delay(1500);     
-//установка часов
 
+       lcd.clear();
+       lcd.setCursor(0, 0);
+       lcd.print("Ce\xB9\xC0""ac \xAB\xAB"":MM"); //Сейчас ЧЧ:ММ
+
+       addr=0x01;//читаем минуты и выводим их правее часов
+       data = bcd2bin(RTC.readByteInRam(addr));
+       lcd.setCursor(3, 1);
+       lcd.print(":");
+       lcd.print(data);
+       addr=0x02;
+       data = bcd2bin(RTC.readByteInRam(addr));//читаем часы и выводим слева+мигающий курсор
+       lcd.setCursor(0, 1);
+       lcd.print(data);
+       lcd.blink();
+       edit_ram(data,23,addr);
+       data = bcd2bin(RTC.readByteInRam(addr));       
+       //Serial.print ("Chasov: ");
+       //Serial.println(data);
+       delay(1000);    
+  
+       lcd.clear();
+       lcd.setCursor(0, 0);
+       lcd.print("Ce\xB9\xC0""ac \xAB\xAB"":MM");
+
+       addr=0x02;//читаем часы
+       data = bcd2bin(RTC.readByteInRam(addr));
+       lcd.setCursor(0, 1);
+       lcd.print(data);
+       lcd.print(":");
+       addr=0x01;
+       data = bcd2bin(RTC.readByteInRam(addr));//читаем минуты
+       lcd.setCursor(3, 1);
+       lcd.print(data);
+       lcd.blink();
+       edit_ram(data,59,addr);
+       data = bcd2bin(RTC.readByteInRam(addr));       
+       //Serial.print ("Chasov: ");
+       //Serial.println(data);
+       delay(1000);    
+       
+      
+
+
+//установка часов
+/*
        addr=0x02;
        data = bcd2bin(RTC.readByteInRam(addr));
        //Serial.print ("Seychas Chasov: ");
@@ -198,7 +241,7 @@ void set_time() {
        lcd.setCursor(0, 1);
        lcd.print(data);
        delay(1000);
-        
+  */      
 //установка времени включения света чч:11, мм:12
        addr=0x11;
        data = bcd2bin(RTC.readByteInRam(addr));
@@ -322,7 +365,7 @@ void set_time() {
 void edit_ram (uint8_t data, uint8_t max, uint8_t addr) {
        do{             
             if (digitalRead(butplus) == LOW){
-                  delay(100);
+                  delay(300);
                   data++;
                   if (data>max){data=0;}
                   RTC.writeByteInRam(addr, bin2bcd(data));
@@ -333,7 +376,7 @@ void edit_ram (uint8_t data, uint8_t max, uint8_t addr) {
              }           
   
              if (digitalRead(butminus) == LOW){
-                  delay(100);
+                  delay(300);
                   data--;
                   if (data==255){data=max;}
                   RTC.writeByteInRam(addr, bin2bcd(data));                 
