@@ -56,7 +56,7 @@ void loop()
     if (now.minute() <10) lcd.print('0');
     lcd.print(now.minute(), DEC);
 
-    interval=RTC.readByteInRam(0x15)*60000;
+    interval=RTC.readByteInRam(0x15)*60000; //переводим секунды в миллисекунды и потом в секунды
      
     unsigned long currentMillis = millis();     //время с момента последнего запуска или резета
     long time=currentMillis - previousMillis;
@@ -70,6 +70,7 @@ void loop()
     if(time > interval) {
           previousMillis = currentMillis;   
           poliv ();
+          previousMillis = currentMillis=millis();   
      }
  
      if (time1>=90){
@@ -77,12 +78,15 @@ void loop()
        if (time1<=6000){ //если время меньше 99 мин
          lcd.print(" ");
        }  
-       lcd.print("min"); 
+       lcd.print("\xBC\xB8\xBD"); 
      }
      
      else{
+       if (time1<=9){ //если время меньше 10 сек
+         lcd.print("0");
+       }    
        lcd.print(time1);
-       lcd.print(" sek""\x20"); 
+       lcd.print(" ce\xBA\x20"); 
      }
      
    if (digitalRead(butplus) == LOW) {    //полив по нажатию кнопки вне очереди
@@ -136,6 +140,7 @@ void poliv() {
    
     digitalWrite(19, LOW);   
     delay (100);
+    lcd.clear();   
     return;  
 }
 
@@ -144,7 +149,10 @@ void set_time() {
 //       Serial.print ("Nastroika vremeni");
 //       Serial.println();
     lcd.clear();
-    lcd.print("Nastroika");
+    lcd.print("Hac\xBF""po\xB9\xBA""a");
+    lcd.setCursor(0, 1);
+    lcd.print("c\xB8""c\xBF""e\xBC\xC3");
+         
     delay(1500);     
 //установка часов
 
@@ -305,7 +313,8 @@ void set_time() {
        lcd.setCursor(0, 1);
        lcd.print(data);
        delay(1000);     
-      lcd.noBlink(); 
+       lcd.noBlink();
+       lcd.clear(); 
        return;
 }  
 
