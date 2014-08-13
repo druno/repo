@@ -2,8 +2,14 @@
 #include <RTClib.h>
 #include <LiquidCrystal.h>
 
+#include <dht.h>
+
+
+
 LiquidCrystal lcd(P1_0, P1_1, P1_2, P1_3, P1_4, P1_5);
 RTC_DS1307 RTC;
+
+dht DHT;
 
 const int butsel = 11;
 const int butplus = 12;
@@ -17,8 +23,8 @@ void setup()
 
     pinMode(19, OUTPUT);  //смеситель
     digitalWrite(19, LOW); //сброс на 0 
-    pinMode(18, OUTPUT);  //свет
-    digitalWrite(18, LOW); //сброс на 0 
+    pinMode(17, OUTPUT);  //свет
+    digitalWrite(17, LOW); //сброс на 0 
     
     pinMode(butsel, INPUT_PULLUP);  //кнопень    
     pinMode(butplus, INPUT_PULLUP);  //кнопень   
@@ -48,7 +54,7 @@ void loop()
        delay(500);
        set_time();
     }  
-  
+    
     DateTime now = RTC.now();
  /*   if (now.hour() <10) Serial.print('0');
     Serial.print(now.hour(), DEC);
@@ -56,7 +62,7 @@ void loop()
     if (now.minute() <10) Serial.print('0');
     Serial.print(now.minute(), DEC);
 */
-    lcd.clear();
+    //lcd.clear();
     lcd.setCursor(0, 0);
 
     if (now.hour() <10) lcd.print('0');
@@ -73,8 +79,20 @@ void loop()
   //    Serial.print("do poliva: ");
   //    Serial.println(time1);
     lcd.setCursor(0, 1);
-    lcd.print("\xE0o \xBEo\xBB""\xB8\xB3""a ");  //do poliva
-  
+   // lcd.print("\xE0o \xBEo\xBB""\xB8\xB3""a ");  //do poliva
+   int chk = DHT.read22(18);
+   lcd.print (DHT.temperature);
+    lcd.print ("\x99 "); 
+   lcd.print (DHT.humidity);
+     lcd.print ("\x25 ");     
+     
+     
+     ///////////////////////////////////////////
+     
+     
+     
+     
+     
      
     if(time > interval) {
           previousMillis = currentMillis;   
